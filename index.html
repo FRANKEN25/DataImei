@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data IMEI Karyawan Erafone Alauddin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    #search-bar {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    #last-Update {
+      margin-bottom: 10px;
+      font-style: italic;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Data IMEI Karyawan Erafone Alauddin</h1>
+  <div id="last-Update">Terakhir diperbarui: -</div>
+
+  <input
+    type="text"
+    id="search-bar"
+    placeholder="Cari nama..."
+    oninput="filterItems()"
+  />
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>No</th>
+        <th>Nama</th>
+        <th>Device/TWS</th>
+        <th>Jumlah</th>
+        <th>Warna</th>
+        <th>IMEI</th>
+        <th>Divisi</th>
+      </tr>
+    </thead>
+    <tbody id="tabel-barang">
+      <tr>
+        <td colspan="8">Sabar.. memuat data...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const sheetID = "1KdQvc0-NACRcRzIFOOCgudNZlajLM1jWuRS20kaG2b4";
+    const sheetName = "Sheet1";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+
+    const lastUpdate = document.getElementById("last-Update");
+    const tabelBarang = document.getElementById("tabel-barang");
+    const searchInput = document.getElementById("search-bar");
+
+    function filterItems() {
+      const searchQuery = searchInput.value.toLowerCase();
+      const rows = tabelBarang.getElementsByTagName("tr");
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName("td");
+        if (cells.length > 0) {
+          const nama = cells[2].textContent.toLowerCase();
+          if (nama.includes(searchQuery)) {
+            rows[i].style.display = "";
+          } else {
+            rows[i].style.display = "none";
+          }
+        }
+      }
+    }
+
+    function formatDateString(raw) {
+      const parts = raw.split("/");
+      if (parts.length !== 3) return raw;
+
+      const day = String(parts[0]).padStart(2, "0");
+      const month = String(parts[1]).padStart(2, "0");
+      const year = parts[2];
+
+      return `${day}/${month}/${year}`;
+    }
+
+    fetch(url)
+      .then((res) => res.text())
+      .then((data) => {
+        const json = JSON.parse(data.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+        tabelBarang.innerHTML = "";
+
+        rows.forEach((row) => {
+          const cells = row.c;
+          const rawTanggal = cells[0]?.v || "-";
+          const tanggal = formatDateString(rawTanggal);
+          const no = cells[1]?.v || "-";
+          const nama = cells[2]?.v || "-";
+          const device = cells[3]?.v || "-";
+          const jumlah = cells[4]?.v || "-";
+          const warna = cells[5]?.v || "-";
+          const imei = cells[6]?.v || "-";
+          const divisi = cells[7]?.v || "-";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${tanggal}</td>
+            <td>${no}</td>
+            <td>${nama}</td>
+            <td>${device}</td>
+            <td>${jumlah}</td>
+            <td>${warna}</td>
+            <td>${imei}</td>
+            <td>${divisi}</td>
+          `;
+          tabelBarang.appendChild(tr);
+        });
+
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, "0");
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+
+        lastUpdate.textContent = `Terakhir diperbarui: ${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+      })
+      .catch((err) => {
+        console.error("Gagal memuat data:", err);
+        tabelBarang.innerHTML =
+          "<tr><td colspan='8'>Gagal memuat data.</td></tr>";
+      });
+  </script>
+</body>
+</html>
